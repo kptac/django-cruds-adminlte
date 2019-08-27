@@ -5,6 +5,8 @@ from django.apps import apps
 
 from .crud import CRUDView, CRUDMixin
 
+import warnings
+
 
 def crud_for_model(model,
                    urlprefix=None,
@@ -102,6 +104,7 @@ def crud_for_app(app_label,
                  views=None,
                  cruds_url=None,
                  modelconfig=None,
+                 modelforms=None,
                  mixin=None):
     """
     Returns list of ``url`` items to CRUD an app.
@@ -116,6 +119,12 @@ def crud_for_app(app_label,
 
     if modelconfig is None:
         modelconfig = {}
+
+    if modelforms is None:
+        modelforms = {}
+    else:
+        warnings.warn("modelforms will be deprecated in favor of modelconfig",
+                      DeprecationWarning)
 
     if mixin and not issubclass(mixin, CRUDMixin):
         raise ValueError(
@@ -148,13 +157,30 @@ def crud_for_app(app_label,
             display_fields = modelconfig[name].get('display_fields')
             search_fields = modelconfig[name].get('search_fields')
             list_filter = modelconfig[name].get('list_filter')
-            template_name_base = modelconfig[name].get('template_name_base', template_name_base)
+            template_name_base = modelconfig[name].get('template_name_base',
+                                                       template_name_base)
             template_blocks = modelconfig[name].get('template_blocks')
             fields = modelconfig[name].get('fields', fields)
             paginate_by = modelconfig[name].get('paginate_by', paginate_by)
-            paginate_template = modelconfig[name].get('paginate_template', paginate_template)
-            template_father = modelconfig[name].get('template_father', template_father)
-            split_space_search = modelconfig[name].get('split_space_search', split_space_search)
+            paginate_template = modelconfig[name].get('paginate_template',
+                                                      paginate_template)
+            template_father = modelconfig[name].get('template_father',
+                                                    template_father)
+            split_space_search = modelconfig[name].get('split_space_search',
+                                                       split_space_search)
+
+        # Following conditions should be removed in future releases
+        if 'add_' + name in modelforms:
+            add_form = modelforms['add_' + name]
+
+        if 'update_' + name in modelforms:
+            update_form = modelforms['update_' + name]
+
+        if 'list_' + name in modelforms:
+            list_fields = modelforms['list_' + name]
+
+        if 'related_' + name in modelforms:
+            related_fields = modelforms['related_' + name]
 
         urls += crud_for_model(model,
                                urlprefix,
